@@ -1,8 +1,8 @@
-import time
+import time,sys
 class Graphe:
     def __init__(self,graphe):
         self.graphe =graphe
-        self.coutMin=None
+        self.coutMin=sys.maxint
         self.cheminMin=None
         self.cpt=0
     def arcExist(self,i,j):
@@ -11,27 +11,6 @@ class Graphe:
         return False
     def dejaVisite(self,chemin,e):
         return self.estElement(chemin,e)
-    
-    def genererCircuit(self,chemin,n):
-        if self.longueur(chemin)==n and self.arcExist(self.queue(chemin),self.tete(chemin)):
-            chemin1=self.cloner(chemin)
-            chemin1=self.ajouterEnQueue(chemin1,chemin1[0])
-            # self.imprimer(chemin1)
-            a=self.coutChemin(chemin)
-            # print 'cout du chemin'
-            # print a
-            self.cpt+=1
-        else:  
-          for s in range(n):
-              s=s+1
-              if self.arcExist(self.queue(chemin),s) and self.dejaVisite(chemin,s)==False:
-                  ch=self.cloner(chemin)
-                  self.ajouterEnQueue(ch,s)
-                  self.genererCircuit(ch,n)
-    def genererTousLesCircuits(self,sommetDepart,n):
-        chemin=self.creer()
-        self.ajouterEnQueue(chemin,sommetDepart)
-        self.genererCircuit(chemin,n)
         
     def creer(self):
         seq=[]
@@ -62,49 +41,68 @@ class Graphe:
     def imprimer(self,seq):
         print seq
     def coutChemin(self,seq):
+        cout=0
         if self.longueur(seq)>1:
-            cout=0
             for i in range(self.longueur(seq)-1):
                 if self.arcExist(seq[i],seq[i+1]):
                     cout+=self.graphe[seq[i]][seq[i+1]]
-            return cout
-        else:
-            return None
+        return cout
+
     def explorerCircuits(self,chemin,n):
         if self.longueur(chemin)==n and self.arcExist(self.queue(chemin),self.tete(chemin)):
             cout=self.coutChemin(chemin)+self.graphe[self.queue(chemin)][self.tete(chemin)]
-            chemin1=self.cloner(chemin)
-            chemin1=self.ajouterEnQueue(chemin1,chemin1[0])
-            # self.imprimer(chemin1)
-            # print 'cout du chemin'
-            # print cout
+            chemin=self.ajouterEnQueue(chemin,chemin[0])
+            self.imprimer(chemin)
+            print 'cout du chemin'
+            print cout
             self.cpt+=1
-            if self.coutMin==None:
-                self.coutMin=cout
-            if cout<self.coutMin:
-                self.cheminMin=chemin
-                self.ajouterEnQueue(self.cheminMin,self.cheminMin[0])
-                self.coutMin=cout
+            self.majCheminMin(chemin,cout)
         else:
             for s in range(n):
               s=s+1
-              if self.arcExist(self.queue(chemin),s) and self.dejaVisite(chemin,s)==False:
+              if self.arcExist(self.queue(chemin),s) and self.dejaVisite(chemin,s)==False and self.coutEstime(chemin,s,n)<self.coutMin:
                   ch=self.cloner(chemin)
                   self.ajouterEnQueue(ch,s)
                   self.explorerCircuits(ch,n)
+
+                  
     def trouverCircuitMin(self,sommetDepart,n):
         chemin=self.creer()
         self.ajouterEnQueue(chemin,sommetDepart)
         self.explorerCircuits(chemin,n)
-            
+        
+    def majCheminMin(self,chemin,cout):
+        if cout<self.coutMin:
+            self.cheminMin=chemin
+            self.coutMin=cout
+        return self.coutMin
+    
+    def coutMinim(self,couts,chemin,aExclure):
+        cout=sys.maxint
+        for i in range(len(couts)-1):
+            i+=1
+            if self.dejaVisite(chemin,i)==False or self.element(chemin,0)==i:
+                if couts[i] and i!=aExclure :
+                    cout=min(couts[i],cout)
+        if cout==sys.maxint:
+            cout=0
+        return cout
+    
+    def coutEstime(self,chemin,sommet,n):
+        cout=self.coutChemin(chemin)
+        cout+=self.graphe[self.queue(chemin)][sommet]
+        cout+=self.coutMinim(self.graphe[sommet],chemin,self.tete(chemin))
+        for s in range(n):
+            s+=1
+            if s !=sommet and self.dejaVisite(chemin,s)==False:
+                cout+=self.coutMinim(self.graphe[s],chemin,sommet)
+        return cout
                 
         
 tps1 = time.clock() 
 #w=[None,[None,None,2,9,None],[None,1,None,6,4],[None,None,7,None,8],[None,6,3,None,None]]
 #villes=[None,[None,None,27,43,16,30,26],[None,7,None,16,1,30,25],[None,20,13,None,35,5,0],[None,21,16,25,None,18,18],[None,12,46,27,48,None,5],[None,23,5,5,9,5,None]]
-#villes1=[None,[None,None,27,43,16,30,26],[None,7,None,16,1,30,25],[None,20,13,None,35,5,0],[None,21,16,25,None,18,18],[None,12,46,27,48,None,5],[None,23,5,5,9,5,None]]
-#villes2=[None,[None,None,27,43,16,30,26,75,28,29,90],[None,7,None,16,1,30,25,60,0,41,80],[None,20,13,None,35,5,0,80,90,100,70],[None,21,16,25,None,18,18,55,25,21,60],[None,12,46,27,48,None,5,56,28,15,50],[None,23,5,5,9,5,None,19,18,21,40],[None,23,5,5,9,5,None,19,18,21,40],[None,23,5,5,9,5,None,19,18,21,40],[None,23,5,5,9,5,None,19,18,21,40],[None,23,5,5,9,5,None,19,18,21,40]]
-#villes3=[None,[None,None,5,43,16,30,26,75,28,29,90,26,75,28,29,90],[None,5,None,43,16,30,26,75,28,29,90,26,75,28,29,90],[None,8,27,None,16,30,26,75,28,29,90,26,75,28,29,90],[None,1,27,43,None,30,26,75,28,29,90,26,75,28,29,90],[None,1,27,43,16,None,26,75,28,29,90,26,75,28,29,90],[None,5,27,43,16,30,None,75,28,29,90,26,75,28,29,90],[None,1,27,43,16,30,26,None,28,29,90,26,75,28,29,90],[None,2,27,43,16,30,26,75,None,29,90,26,75,28,29,90],[None,1,27,43,16,30,26,75,28,None,90,26,75,28,29,90],[None,1,27,43,16,30,26,75,28,29,None,26,75,28,29,90],[None,1,27,43,16,30,26,75,28,29,90,None,75,28,29,90],[None,1,27,43,16,30,26,75,28,29,90,26,None,28,29,90],[None,1,27,43,16,30,26,75,28,29,90,26,75,None,29,90],[None,1,27,43,16,30,26,75,28,29,90,26,75,28,None,90],[None,1,27,43,16,30,26,75,28,29,90,26,75,28,29,None]]
+#villes=[None,[None,None,27,43,16,30,26,75,28,29,90],[None,7,None,16,1,30,25,60,0,41,80],[None,20,13,None,35,5,0,80,90,100,70],[None,21,16,25,None,18,18,55,25,21,60],[None,12,46,27,48,None,5,56,28,15,50],[None,23,5,5,9,5,None,19,18,21,40],[None,23,5,5,9,5,None,19,18,21,40],[None,23,5,5,9,5,None,19,18,21,40],[None,23,5,5,9,5,None,19,18,21,40],[None,23,5,5,9,5,None,19,18,21,40]]
 villes2 = [None, [None, None, 2, 12, 6, 15, 16, 20, 13, 14, 16, 23, 23, 29, 25, 26, 27],
            [None, 2, None, 10, 8, 17, 18, 18, 15, 16, 18, 25, 25, 27, 27, 28, 29],
            [None, 12, 10, None, 14, 15, 14, 10, 25, 26, 26, 19, 23, 17, 29, 28, 27],
@@ -130,11 +128,10 @@ w=[None,[None,None,76,43,38,51,42,19,80],
    [None,66,51,83,51,22,None,37,71],
    [None,77,62,93,54,69,38,None,26],
    [None,42,58,66,76,41,52,83,None]]
-g=Graphe(villes2)
+g=Graphe(w)
 print "Tous les ciruits visites pour calculer le chemin min"
-#g.genererTousLesCircuits(1,4)
-g.trouverCircuitMin(1,16)
-print "nombre de chemins"
+g.trouverCircuitMin(1,8)
+print "nb de circuits"
 print g.cpt
 print "chemin min"
 print g.cheminMin
@@ -145,5 +142,9 @@ print "temps d'execution"
 print(tps2 - tps1)
 
 
-
-
+# -------------- Branch & Bound V2 --------------
+# Min path : [1, 4, 2, 3, 7, 6, 5, 12, 11, 13, 16, 15, 14, 8, 9, 10, 1]
+# Min cost : 123
+# Covered paths: 11
+# Exec Time : 0.006531000000000002
+# -----------------------------------------------
